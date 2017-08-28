@@ -107,7 +107,7 @@ router.post('/addlike',function(req,res,next){      //remove post, add like or i
             return addPost(postnew);
             //console.log("liked_by of postnew: ",postnew[0].liked_by);
         }).then(function(posted){
-            console.log("post added",posted);
+            console.log("post added",posted);           //send response back
         });
     });
 });

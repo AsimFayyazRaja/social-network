@@ -143,6 +143,7 @@ body {
         };
         $http.post('/users/addlike',{data:data}).then(function(res){
            console.log('like inserted');
+           $scope.posts=res.data;
            $http.get('/users/home').then(function(res){
         //if(res.data[0].username==$cookies.get('currentUser'))
         $scope.posts=res.data;                      //getting posts from server
@@ -200,6 +201,7 @@ body {
 $scope.dpcomment=function(commentdp){
     console.log(commentdp);
     console.log("dpuser"+ $scope.profileusr);
+    $scope.commentTest = commentdp;
     $http.post('/users/comment-dp',{dpuser: $scope.profileusr,comment: $scope.commentdp}).then(function(res){
         console.log("response: ",res.data);
 });    
@@ -285,6 +287,7 @@ $http.post('/users/like-dp',{dpuser: $scope.profileusr}).then(function(res){
 <div ng-repeat="dpcmnt in dpcmnts track by $index">
     <span class="glyphicon glyphicon-user">{{dpcmnt.user}}: {{dpcmnt.comment}} </span>
 </div>
+<p>{{commentTest}}</p>
 
 
 <br><br>
