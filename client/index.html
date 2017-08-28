@@ -1,0 +1,152 @@
+<html ng-app="fb">
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-cookies.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+ integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+ crossorigin="anonymous">
+
+<style>
+
+.glyclr {
+    color:cadetblue;
+}
+.glyclr1 {
+    color:palevioletred;
+}
+
+    body {
+    background-color: black;
+}
+.badge {
+  padding: 1px 9px 2px;
+  font-size: 15px;
+  font-weight: bold;
+  white-space: nowrap;
+  color:antiquewhite;
+  background-color: darkred; 
+  -webkit-border-radius: 9px;
+  -moz-border-radius: 9px;
+  border-radius: 9px;
+}
+.badge:hover {
+  color:indianred;
+  text-decoration: bold;
+  cursor: pointer;
+}
+.badge-error {
+  background-color: #b94a48;
+}
+
+    </style>
+
+<script>
+
+//will add directives to make it chikna!!
+
+var app=angular.module('fb', ['ngRoute','ngCookies'])
+       .config(['$locationProvider', function($locationProvider) {
+           $locationProvider.html5Mode(false);
+           $locationProvider.hashPrefix('');
+        }]);
+
+    app.controller('index',function($scope,$http,$window,$cookies){       
+        $scope.submitLogin=function()
+        {
+          //alert('button pressed');
+          console.log($scope.loginusername,$scope.loginpassword);
+          var userdata={
+                username: $scope.loginusername,
+                password: $scope.loginpassword
+            };
+          $http.put('/users/login',{data: userdata})
+          .then(function(res){
+            $cookies.put('currentUser', $scope.loginusername);
+            $window.location="home";
+          },function(err){
+            alert('Invalid credentials');
+          });
+        };
+
+        $scope.submitSignup=function()
+        {
+            console.log("signup clicked");
+            var userdata={
+                username: $scope.username,
+                password: $scope.password,
+                fname: $scope.fname,
+                lname: $scope.lname,
+                dob: $scope.date
+            };
+          $http.post('/users/signup',{data: userdata}).then(function(res){
+            alert('username password sent to server');
+          },function(err){
+            alert('signup unsuccessfull, use another username');  
+          });
+        };
+
+});
+
+
+
+    </script>
+<head>
+<title>Index</title>
+    </head>
+
+<body ng-controller="index">
+    <div class="form-group">
+            <br><br>
+            <div class ="col-md-4" align="left">
+           <h2> <span class="label label-info">Login Here</span> </h2>
+           <h4> 
+            <br><br>
+            <span class="label label-primary">Username</span>
+           <span class="glyphicon glyphicon-hand-right glyclr"> </span>   <input type="text" size= "20" placeholder="No spaces" ng-model="loginusername">
+            <br><br>
+            <span class="label label-primary">Password</span>
+            <span class="glyphicon glyphicon-hand-right glyclr"> </span>  <input type="password" size="20" ng-model="loginpassword">
+            <br><br>
+            <button type="submit" class="btn btn-info btn-lg" aria-label="Left Align" ng-click="submitLogin()">
+            <span class="glyphicon glyphicon-user" aria-hidden="true"> Login</span>
+            </button>
+            <br><br>
+            {{loginusername}}
+            </div>
+            </div>
+</h4>
+
+<div class="form-group">
+<div class ="col-md-8" align="center">
+<h2> <span class="label label-danger">Signup Here</span> </h2>
+<h4><br><br>
+<span class="badge">Username</span>
+<span class="glyphicon glyphicon-hand-right glyclr1"> </span>  <input type="text" placeholder="No spaces" ng-model="username" size= "20">
+<br><br>
+<span class="badge">Password</span>
+<span class="glyphicon glyphicon-hand-right glyclr1"> </span>  <input type="password" ng-model="password" size= "20">
+<br><br>
+<span class="badge">First Name</span>
+<span class="glyphicon glyphicon-hand-right glyclr1"> </span>  <input type="text" ng-model="fname" size= "20">
+<br><br>
+<span class="badge">Last Name</span>
+<span class="glyphicon glyphicon-hand-right glyclr1"> </span>  <input type="text" ng-model="lname" size= "20">
+<br><br>
+<span class="badge">Date of birth</span>
+<span class="glyphicon glyphicon-hand-right glyclr1"> </span>  <input type="date" ng-model="date" size= "20">
+<br><br>
+<br>
+
+<button type="submit" class="btn btn-danger btn-lg" aria-label="Left Align" ng-click="submitSignup()">
+  <span class="glyphicon glyphicon-user" aria-hidden="true"> Signup</span>
+</button>
+
+<br>
+<p> {{username}} </p>
+</div>
+</div>
+</h4>
+    </body>
+    </html>

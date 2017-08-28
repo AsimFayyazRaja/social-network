@@ -1,0 +1,166 @@
+<html ng-app="chat">
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-cookies.js"></script>
+
+<!-- app.js should be in root folder
+<script src="./client/angular-cookies.min.js"></script>
+<script src="./client/angular.min.js"></script>
+-->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+ integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+ crossorigin="anonymous">
+
+<script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"> </script>
+
+
+<style>
+    
+#menu { padding:12.5px 25px 12.5px 25px; }
+  
+.welcome { float:left; }
+  
+.logout { float:right; }
+
+
+body {
+    background-color: lightblue;
+    font:12px arial;
+    color: #222;
+    text-align:center;
+    padding:35px; }
+  
+form, p, span {
+    margin:0;
+    padding:0; }
+  
+input { font:12px arial; }
+  
+a {
+    color:#0000FF;
+    text-decoration:none; }
+  
+    a:hover { text-decoration:underline; }
+  
+#wrapper, #loginform {
+    margin:0 auto;
+    padding-bottom:25px;
+    background:slateblue;
+    width:504px;
+    border:1px solid #ACD8F0; }
+  
+  
+#chatbox {
+    text-align:left;
+    margin:0 auto;
+    margin-bottom:25px;
+    padding:10px;
+    background:cornflowerblue;
+    height:500px;
+    width:430px;
+    border:1px solid #ACD8F0;
+    overflow:auto; }
+  
+#usermsg {
+    width:395px;
+    border:1px solid #ACD8F0; }
+  
+#submit { width: 60px; }
+  
+.error { color: #ff0000; }
+    
+.msgln { margin:0 0 2px 0; }
+    </style>
+
+
+<head>
+
+<title>Messenger</title>
+
+<script>
+     var app=angular.module('chat', ['ngCookies'])
+       .config(['$locationProvider', function($locationProvider) {
+           $locationProvider.html5Mode(false);
+           $locationProvider.hashPrefix('');
+        }]);
+
+ app.controller('chatctrl',function($scope,$rootScope,$http,$cookies,$window){
+    var socket=window.io('localhost:3000/');
+    $scope.messages=[];
+    $scope.unread_messages=[];
+    var users={
+        user1: $cookies.get('currentUser'),
+        user2: $cookies.get('profileUser')
+    };
+    
+    $scope.messages.push(users);                       //set users who are chatting
+    socket.on("sendmessage",function(data){
+    $scope.$apply(function(){
+        if(users.user1 !=data.user1 && users.user1 != data.user2)       //third party messages
+        {
+            //$scope.unread_messages.push(data);
+        }
+        else if(data.user1 !=users.user1 && data.user1 !=users.user2)       //unread messages
+        {
+            console.log("unread messages");
+            $scope.unread_messages.push(data);
+            console.log($scope.unread_messages);
+        }
+        else{                                   //real time chat
+        $scope.messages=[];
+        $scope.messages.push(users);
+        //console.log($scope.messages);
+        console.log(data);
+        $scope.messages.push(data);
+        }
+    });
+    });
+      $scope.createUser=function(msg){
+        console.log(msg);
+        var data={
+          msg: msg,
+          user1: $cookies.get('currentUser'),     //user1 sends
+          user2: $cookies.get('profileUser')      //user2 receives
+        };
+        console.log(data);
+      socket.emit("message",data);
+      $scope.msg="";
+    };
+
+    var data={
+        user1: $cookies.get('currentUser'),
+        user2: $cookies.get('profileUser')
+    };
+ });
+
+ </script>
+   </head>
+   <body ng-controller="chatctrl">
+    
+
+<div id="wrapper">
+
+<div id="menu">
+        <h2 class="welcome"><b> {{messages[0].user2}} </b></h2>
+    </div> 
+
+ <div id="chatbox">
+<div ng-repeat="msg in messages[1].messages">
+<h3> <span class="glyphicon glyphicon-user"> </span>  {{msg.sent_by}}  </h3>
+         <h5>       {{msg.msg}}   </h5>
+                At: {{msg.date}}
+  </div>
+  <br>
+ </div>
+     
+    <form>
+        <input ng-model="msg" type="text" id="usermsg" size="63" />
+        <input name="submitmsg" type="submit" ng-click="createUser(msg)"  id="submitmsg" value="Send" />
+    </form>
+</div>
+
+    
+   </body>
+</html>

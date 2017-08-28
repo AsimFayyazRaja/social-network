@@ -1,0 +1,365 @@
+<html ng-app="home">
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-cookies.js"></script>
+<script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/danialfarid-angular-file-upload/12.2.13/ng-file-upload.min.js"></script>
+<script src="http://code.angularjs.org/1.2.13/angular-animate.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular-route.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+ integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+ crossorigin="anonymous">
+<head>
+
+<style>
+
+    input[type=text], input[type=password], input[type=email] {
+    font-size: 20px;
+    margin-bottom:10px;
+    padding: 8px 6px;
+    height: 38px;
+    width:350px;
+    box-sizing: border-box;
+}
+
+body {
+    background-color:lightskyblue;
+}
+
+    .badge:hover {
+    color:indianred;
+    text-decoration: bold;
+    cursor: pointer;
+    }
+    .badge {
+  padding: 1px 9px 2px;
+  font-size: 20px;
+  font-weight: bold;
+  white-space: nowrap;
+  color:antiquewhite;
+  background-color: black; 
+  -webkit-border-radius: 9px;
+  -moz-border-radius: 9px;
+  border-radius: 9px;
+}
+
+.likes{
+    font-size: 15px;
+    color: darkblue;
+    background-color: deepskyblue;
+}
+.likes:hover{
+    color: antiquewhite;
+}
+
+    .feed{
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-top: 100px;
+    min-height: 1000px;
+    }
+    </style>
+
+<script>
+
+    var app=angular.module('home', ['ngCookies','ngFileUpload', 'ngRoute'])
+       .config(['$locationProvider', function($locationProvider) {
+           $locationProvider.html5Mode(false);
+           $locationProvider.hashPrefix('');
+        }]);
+    app.controller('homectrl',function($scope,$http,$cookies,$window,$route){
+    
+        $scope.profile=function()
+        {
+            console.log("search pressed");
+            $cookies.put('profileUser', $scope.profileuser);
+            $scope.profileusr=$cookies.get('profileUser');
+            console.log($cookies.get('profileUser'));
+            $window.location="profile";    
+        };
+
+    $scope.gotonewsfeed=function()
+    {
+        $window.location="newsfeed";
+    };
+
+    $scope.likecomment=function(id){
+        console.log(id);
+        var data={
+            cid: id,
+            user: $cookies.get('currentUser')
+        };
+        $http.post('/users/likethiscomment',{data:data}).then(function(res){
+            console.log("Comment liked");
+            $http.get('/users/home').then(function(res){
+            //    if(res.data[0].username==$cookies.get('currentUser'))
+                $scope.posts=res.data;                      //getting posts from server
+            },function(err){
+                console.log("error");
+            });
+        },function(err){
+            console.log("Error in liking the comment");
+        });
+    };
+
+
+    $scope.addcomment=function(id,comm){
+        console.log(id);
+        var data={
+            post_id: id,
+            username: $cookies.get('currentUser'),
+            comment: comm
+        };
+        console.log(comm);
+        //console.log($scope.comment);
+        $scope.comment=" ";
+        comm="";
+        //console.log(data.comment);
+        $http.post('/users/addcomment',{data:data}).then(function(res){
+           console.log('comment sent to server');
+           $http.get('/users/home').then(function(res){
+           // if(res.data[0].username==$cookies.get('currentUser'))
+            $scope.posts=res.data;                      //getting posts from server
+            },function(err){
+                console.log("error");
+            });
+            },function(err){
+            cosnsole.log('error in adding comment');
+        });
+    };
+
+    $scope.showlikes=[];
+    $scope.x=0;
+    $scope.likefunc=function(ind,id){
+        //console.log("likes pressed");     //x will iterate from 0 to onwards and those which showlikes
+        //console.log(id);                  //are true will be shown
+        $scope.showlikes[id]=!($scope.showlikes[id]);
+        console.log(id);
+        var data={
+            postid: id,
+            username: $cookies.get('currentUser')
+        };
+        $http.post('/users/addlike',{data:data}).then(function(res){
+           console.log('like inserted');
+           $http.get('/users/home').then(function(res){
+        //if(res.data[0].username==$cookies.get('currentUser'))
+        $scope.posts=res.data;                      //getting posts from server
+        console.log($scope.posts);
+        //console.log($scope.posts[3].commented_by[0].cid);
+    },function(err){
+        console.log("error");
+    });
+        },function(err){
+            cosnsole.log('error in inserting like');
+        });
+        //console.log($scope.showlikes);
+        //console.log($scope.ind);
+        //console.log($scope.showlikes[$scope.ind]);
+    };
+    $scope.submitPost=function(){
+        var newpost={
+            username: $cookies.get('currentUser'),
+            post: $scope.addpost
+        };
+        $http.post('/users/post',{newPost: newpost}).then(function(res){
+                $http.get('/users/home').then(function(res){
+            $scope.posts=res.data;                      //getting posts from server
+            alert('post inserted');
+        },function(err){
+            console.log("error");
+        });
+        },function(err){
+            alert('error in inserting post');
+        });
+    };
+
+    $scope.imgupload=function(){        //get dp of user here and now post it to server
+        console.log("in add dp");
+        console.log($scope.dispImage);
+        var fd = new FormData();
+        var img=$scope.dispImage;
+        console.log(img);
+        var formdata = new FormData();
+        formdata.append('img',img);
+        //fd.push({img:$scope.dispimage});
+        //var imgBlob = dataURItoBlob($scope.dispImage);
+        //fd.append('file', imgBlob);
+        //$http.post('/users/upload-dp',{data:img});
+            
+        $http.post('/users/upload-dp',formdata,{
+            transformRequest:angular.identity,
+            headers:{'Content-Type': undefined}
+        }).then(function(res){
+            //$route.reload();
+            $window.location.reload();
+    });
+}
+
+$scope.dpcomment=function(commentdp){
+    console.log(commentdp);
+    console.log("dpuser"+ $scope.profileusr);
+    $http.post('/users/comment-dp',{dpuser: $scope.profileusr,comment: $scope.commentdp}).then(function(res){
+        console.log("response: ",res.data);
+});    
+};
+
+$scope.likedp=function(){
+    console.log("dpuser"+ $scope.profileusr);
+$http.post('/users/like-dp',{dpuser: $scope.profileusr}).then(function(res){
+    console.log("dpuser",$scope.profileusr);
+    //console.log(res);
+});
+
+};
+    $scope.submitFile=function(){
+        console.log("in submit file");
+        console.log($scope.dispimage);
+        var formData;
+        var file=$('#file');
+        console.log("file..", file);
+    };
+
+    $http.get('/users/home').then(function(res){
+        //if(res.data[0].username==$cookies.get('currentUser'))
+        $scope.user=$cookies.get('currentUser');            //loggedIN user
+        $cookies.put('profileUser', $scope.user);
+        $scope.profileusr=$cookies.get('profileUser');     //user whoose profile is loggedIN person ON
+        $scope.posts=res.data.arr;
+        console.log(res.data);                      //getting posts from server
+        $scope.dp=res.data.dp;
+        $scope.dplikes=res.data.dplikes;
+        $scope.dpcmnts=res.data.dpcmnts;
+        //console.log($scope.dp);
+        //console.log($scope.posts);
+        //console.log($scope.posts[3].commented_by[0].cid);
+    },function(err){
+        console.log("error");
+    });
+
+});
+    </script>
+
+<title>Home</title>
+    </head>
+
+<body ng-controller="homectrl">
+
+
+
+<nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand" href="/home">Newsfeed</a>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="/newsfeed">Manage Friends<span class="sr-only">(current)</span></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+      </li>
+      <li class="nav-item">
+        <div>
+    <button type="submit" class="btn btn-success btn-md bright"><a href="chat"> Messenger </a></button>
+    </div>
+ &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp;
+      </li>
+      
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+ &nbsp; &nbsp;  &nbsp; &nbsp;   <input class="form-control mr-sm-2" type="text" placeholder="Search for friends" ng-model="profileuser">
+   &nbsp;   <button class="btn btn-outline-success my-2 my-sm-0" type="submit" ng-click="profile(profileuser)">Search</button>
+    </form>
+  </div>
+</nav>
+
+<img ng-src="{{dp}}" height="200" width="200"> &nbsp; <span class="badge"> {{user}}  </span>
+<h3><span class="badge likes">Like</span><button ng-click="likedp()"> <span class="glyphicon glyphicon-thumbs-up"> </span> </button> </a></h3>
+<div ng-repeat="dplike in dplikes track by $index">
+    {{dplike}}
+</div>
+<input type="text" class="input comment" ng-model="commentdp" placeholder="Comment on dp">
+     <button type="Submit" class="btn btn-info" ng-click="dpcomment(commentdp)">Comment</button>
+
+<div ng-repeat="dpcmnt in dpcmnts track by $index">
+    <span class="glyphicon glyphicon-user">{{dpcmnt.user}}: {{dpcmnt.comment}} </span>
+</div>
+
+
+<br><br>
+
+
+<fieldset class="pic-select">
+            <label>Display Picture</label><br>
+            <input type="file" ngf-select ng-model="dispImage" name="file"
+            accept="image/*" required>
+            <img class="image-display" ng-show="myForm.file.$valid"
+            ngf-resize="{width: 100, height: 100, quality: 0.9}" ngf-src="dispImage" class="thumb">
+ <button ng-click="dispImage = null" ng-show="dispImage">Remove</button>
+ <button ng-click="imgupload()" ng-show="dispImage">Add as profile pic</button>
+            <br>
+            <div><h5>{{progressDisp}}</h5></div>
+            </fieldset>
+
+
+
+
+<div class="feed">
+    <div class ="col-md-4">
+<form>
+<h3> Add Post  &nbsp; <span class="glyphicon glyphicon-pencil"> </span> </h3>
+<br>
+<input type="text" class="input" ng-model="addpost" placeholder="What is on your mind?" size="40">
+<br>
+<button class="btn btn-info btn-lg" ng-click="submitPost()">Post</button>
+<br><br>
+</form>
+</div>
+
+
+
+<div class="col-md-8">
+    <br><br><br>
+<div ng-repeat="post in posts track by $index">
+<ul>
+    <div ng-repeat="postobj in post track by $index">
+    <h3><span class="glyphicon glyphicon-user"><span class="badge"> {{postobj.username}} </span> </span></h3>
+    <li>
+     <h4> <div class="post">  {{postobj.post}} </div> </h4>
+     <h3><span class="badge likes"> {{postobj.liked_by.length}}</span><button ng-click="likefunc($index,postobj._id)"> <span class="glyphicon glyphicon-thumbs-up"> </span> </button> </a></h3>
+    <div ng-repeat="likes in postobj.liked_by track by $index" class="text-success">
+        <div>
+          <h6> {{likes}} </h6>
+          </div>
+     </div>
+     <input type="text" class="input comment" ng-model="comment" placeholder="Add a comment">
+     <button type="Submit" class="btn btn-info" ng-click="addcomment(postobj._id,comment)">Comment</button>
+        </li>
+        <h3> <span class="badge likes">Comments</span>  <span class="glyphicon glyphicon-comment"> </span> </h3>
+        <div ng-repeat="comments in postobj.commented_by track by $index" >
+            <div ng-show="comments.user">
+        <h5 class="text-danger"><span class="glyphicon glyphicon-user">{{comments.user}}: {{comments.comment}} <button type="Submit" ng-click="likecomment(comments.cid)"><span class="glyphicon glyphicon-thumbs-up"> {{comments.liked_by.length}} </span></button> </span></h5>
+            <div ng-repeat="like in comments.liked_by" class="text-success">
+                {{like}}
+                </div>
+            </div>
+            </div>
+            
+        <br><br>
+    </ul>
+    </div>
+</div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

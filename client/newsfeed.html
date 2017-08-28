@@ -1,0 +1,254 @@
+<html ng-app="feed">
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-cookies.js"></script>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+ integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+ crossorigin="anonymous">
+
+
+<style>
+
+    input[type=text], input[type=password], input[type=email] {
+    font-size: 20px;
+    margin-bottom:10px;
+    padding: 8px 6px;
+    height: 38px;
+    width:350px;
+    box-sizing: border-box;
+}
+
+.container {
+    width:40%;
+    text-align:right;
+}
+
+.dd{
+    margin-left: 1000px;
+    margin-right: 100px;
+    position: fixed;
+    top: 10;
+}
+
+#wrapper{
+    overflow:auto;
+}
+
+#c1{
+   float:left;
+}
+
+#c2{
+    float:right;
+}​
+    .friend{
+        float:right;
+    }
+    .badge:hover {
+    color:indianred;
+    text-decoration: bold;
+    cursor: pointer;
+    }
+    .badge {
+  padding: 1px 9px 2px;
+  font-size: 20px;
+  font-weight: bold;
+  white-space: nowrap;
+  color:antiquewhite;
+  background-color: black; 
+  -webkit-border-radius: 9px;
+  -moz-border-radius: 9px;
+  border-radius: 9px;
+}
+
+.likes{
+    font-size: 15px;
+    color: darkblue;
+    background-color: deepskyblue;
+}
+.likes:hover{
+    color: antiquewhite;
+}
+
+body {
+    background-color:lightskyblue;
+}
+    .feed{
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-top: 100px;
+    min-height: 1000px;
+    }
+    </style>
+
+<script>
+var app=angular.module('feed', ['ngRoute','ngCookies'])
+       .config(['$locationProvider', function($locationProvider) {
+           $locationProvider.html5Mode(false);
+           $locationProvider.hashPrefix('');
+        }]);
+
+        app.controller('newsfeed',function($scope,$http,$window,$cookies){
+            $scope.friends_req;
+        $scope.unfriend=function(usname){
+            console.log(usname);
+            $http.post('/feed/unfriend',{user: usname}).then(function(res){
+                //console.log(res.data);
+            },function(err){
+                console.log("error in unfriending");
+            });
+        };
+
+        
+        $scope.generateusers=function(){            //generating all users that are not friends
+            $http.get('/feed/getusers').then(function(res){     //to whom req is sent, no further button
+                $scope.usertoggle=!$scope.usertoggle;           //to send request appears
+                //console.log(res.data);
+                var us=$cookies.get('currentUser');
+                $http.post('/feed/getrequests',{user: us}).then(function(docs){
+                $scope.friends_req=docs.data;
+                //console.log($scope.friends_req);
+                $scope.users=res.data;
+                console.log($scope.users);
+                var x=1;
+                for(var i=0;i<$scope.users.length;i++){
+                    x=1;
+                    for(var j=0;j<$scope.friends_req.length;j++)
+                    {
+                        if($scope.users[i].username==$scope.friends_req[j])
+                        {
+                            $scope.users[i].request=true;
+                            x=0;break;
+                        }
+                    }
+                    if(x!=0){
+                        $scope.users[i].request=false;
+                    }
+                }
+                //console.log($scope.users);
+            });
+            },function(err){
+                console.log("error in fetching users");
+            });
+        };
+
+        $scope.friendrequests=function(){
+           // console.log("Friend req clicked");
+            $http.get('/feed/requests').then(function(res){
+                $scope.requests=res.data;
+                console.log($scope.requests);
+            });
+        };
+
+       $scope.add=function(user){
+
+        $http.post('/feed/add',{user: user}).then(function(res){
+            console.log("Friend added");
+        });
+       };
+
+       $scope.sendrequest=function(user){
+           var user={
+            sent_by: $cookies.get('currentUser'),
+            sent_to: user,
+            seen: false
+           };
+        $http.post('feed/sendrequest',{user: user}).then(function(res){
+            console.log("Request sent");
+        });
+       };
+
+        $scope.viewfriends=function(){
+            var us=$cookies.get('currentUser');
+            //console.log(us);
+            $scope.friendview=!$scope.friendview;
+            $http.post('/feed/getfriends',{user: us}).then(function(res){
+                $scope.friends=res.data;
+                /*$http.post('/feed/getrequests',{user: us}).then(function(docs){
+                //$scope.friends_req=docs.data;
+                //console.log($scope.friends_req);
+            });*/
+                //console.log($scope.friends);
+                //console.log("Got your friends");
+            },function(err){
+                console.log("Error in fetching friends");
+            });
+        };
+});
+
+    </script>
+<title>Newsfeed</title>
+
+<body ng-controller="newsfeed">
+<div class="feed">
+    <div class ="col-md-4">
+<div>
+   <label class="badge"> Want to add some friends?</label>
+    <br><br>
+    <button type="Submit" ng-click="generateusers()">Search for friends</button>
+    <br><br>
+    </div>
+
+<br><br>
+    <div>
+        <ul>
+            <div ng-repeat="user in users" ng-show="usertoggle">
+                <li>
+                 <h3> <span class="glyphicon glyphicon-user"></span> {{user.fname}}  {{user.lname}} </h3>
+                 @<small>{{user.username}}</small><br>
+                    <div ng-hide="user.request">
+                    <button ng-click="sendrequest(user.username)">Add Friend </button>
+                    </div>
+                    <div ng-show="user.request">
+                    <p> Request sent </sent>
+                    </div>
+                    </div> 
+                    </li>
+            </ul>
+        </div>
+<br>
+</div>
+
+
+<div class="dropdown dd">
+    <button class="btn btn-primary dropdown-toggle" ng-click="friendrequests()" type="button" data-toggle="dropdown">Friend Requests
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+        <div ng-repeat="request in requests track by $index">
+      <li>{{request}}<button ng-click="add(request)">Add Friend </button> </li>
+      </div>
+      <li>No more requests to show </li>
+    </ul>
+  </div>
+
+
+
+<div class ="col-md-6">
+<div>
+   <label class="badge"> Want to view your friends?</label>
+    <br><br>
+    <button type="Submit" ng-click="viewfriends()">View Friends</button>
+    <br><br>
+    </div>
+    <div>
+        <ul>
+            <div ng-repeat="friend in friends" ng-show="friendview">
+                <li>
+                 <h3> <span class="glyphicon glyphicon-user"></span> {{friend.fname}}  {{friend.lname}} </h3> 
+                 @<small>{{friend.username}}</small><br>
+                    <button ng-click="unfriend(friend.username)">Unfriend</button>
+                    <br> 
+                    </li>
+                </div>
+            </ul>
+        </div>
+<br>
+</div>
+</div>​
+</body>
+</html>

@@ -1,0 +1,206 @@
+<html ng-app="profile">
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.5/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-cookies.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+ integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+ crossorigin="anonymous">
+
+<style>
+
+    input[type=text], input[type=password], input[type=email] {
+    font-size: 20px;
+    margin-bottom:10px;
+    padding: 8px 6px;
+    height: 38px;
+    width:350px;
+    box-sizing: border-box;
+}
+
+.bright{
+    position: absolute;
+right: 10px;
+top: 5px;
+}
+
+body {
+    background-color:lightskyblue;
+}
+
+    .badge:hover {
+    color:indianred;
+    text-decoration: bold;
+    cursor: pointer;
+    }
+    .badge {
+  padding: 1px 9px 2px;
+  font-size: 20px;
+  font-weight: bold;
+  white-space: nowrap;
+  color:antiquewhite;
+  background-color: black; 
+  -webkit-border-radius: 9px;
+  -moz-border-radius: 9px;
+  border-radius: 9px;
+}
+
+.likes{
+    font-size: 15px;
+    color: darkblue;
+    background-color: deepskyblue;
+}
+.likes:hover{
+    color: antiquewhite;
+}
+
+    .feed{
+    margin-left: 100px;
+    margin-right: 100px;
+    margin-top: 100px;
+    min-height: 1000px;
+    }
+    </style>
+
+
+<head>
+
+<title>Profile</title>
+
+<script>
+     var app=angular.module('profile', ['ngCookies'])
+       .config(['$locationProvider', function($locationProvider) {
+           $locationProvider.html5Mode(false);
+           $locationProvider.hashPrefix('');
+        }]);
+
+ app.controller('profilectrl',function($scope,$http,$cookies,$window){
+   
+        $http.post('/users/getprofileofuser',{data: $cookies.get('profileUser')}).then(function(res){
+            console.log("got response",res.data);
+            $scope.posts=res.data.posts;
+            $scope.dp=res.data.dp;
+            $scope.dplikes=res.data.dplikes;
+            $scope.dpcmnts=res.data.dpcmnts;
+        },function(err){
+            console.log("error in getting profile of " + $cookies.get('profileUser'));
+            alert('Sorry, this user has not posted anything yet');
+        });
+
+        $scope.chat=function()
+        {
+            console.log("chat clicked");
+        };
+
+
+$scope.likedp=function(){
+    $scope.profileUser=$cookies.get('profileUser');
+    console.log("dpuser"+ $scope.profileUser);
+$http.post('/users/like-dp',{dpuser: $scope.profileUser}).then(function(res){
+    console.log("dpuser",$scope.profileUser);
+
+    //console.log(res);
+});
+};
+
+
+$scope.dpcomment=function(commentdp){
+    $scope.profileusr=$cookies.get('profileUser');
+    console.log(commentdp);
+    console.log("dpuser"+ $scope.profileusr);
+    $http.post('/users/comment-dp',{dpuser: $scope.profileusr,comment: $scope.commentdp}).then(function(res){
+        console.log("response: ",res.data);
+});
+};
+
+
+ });
+
+ </script>
+   </head>
+
+   <body ng-controller="profilectrl">
+
+
+<nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand" href="/home">Newsfeed</a>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="newsfeed">Manage Friends <span class="sr-only">(current)</span></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Link</a> &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp;
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">Disabled</a>  &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp;
+      </li>
+    </ul>
+ 
+  </div>
+</nav>
+
+
+
+    <div class="col-md-8">
+    <br><br><br>
+    <div>
+    <button type="submit" ng-click="chat()" class="btn btn-success btn-lg bright"><a href="chat"> Chat with {{posts[0].username}} </a></button>
+    </div>
+
+<div ng-hide="posts[0].username">
+<h3 class="text-center  text-danger">  Uh-oh seems like no user here, please click on <mark> Newsfeed </mark>  to go back. </h3>
+    </div>
+
+<img ng-src="{{dp}}" height="200" width="200"> &nbsp; <span class="badge"> {{user}}  </span>
+<h3><span class="badge likes">Like</span><button ng-click="likedp()"> <span class="glyphicon glyphicon-thumbs-up"> </span> </button> </a></h3>
+<div ng-repeat="dplike in dplikes track by $index">
+    {{dplike}}
+</div>
+<input type="text" class="input comment" ng-model="commentdp" placeholder="Comment on dp">
+     <button type="Submit" class="btn btn-info" ng-click="dpcomment(commentdp)">Comment</button>
+
+<div ng-repeat="dpcmnt in dpcmnts track by $index">
+    <span class="glyphicon glyphicon-user">{{dpcmnt.user}}: {{dpcmnt.comment}} </span>
+    <br>
+</div>
+
+<br><br>
+
+
+<div ng-repeat="post in posts">
+<ul>
+    <h3><span class="glyphicon glyphicon-user"><span class="badge"> {{post.username}} </span> </span></h3>
+    <li>
+     <h4> <div class="post">  {{post.post}} </div> </h4>
+     <h3><span class="badge likes"> {{post.liked_by.length}}</span><span class="glyphicon glyphicon-thumbs-up"></span>  </h3>
+    <div ng-repeat="likes in post.liked_by track by $index" class="text-success">
+        <div>
+          <h6> {{likes}} </h6>
+          </div>
+     </div>
+        </li>
+        <h3> <span class="badge likes">Comments</span>  <span class="glyphicon glyphicon-comment"> </span> </h3>
+        <div ng-repeat="comments in post.commented_by track by $index" >
+            <div ng-show="comments.user">
+        <h5 class="text-danger"><span class="glyphicon glyphicon-user">{{comments.user}}: {{comments.comment}} <span class="glyphicon glyphicon-thumbs-up"> {{comments.liked_by.length}} </span></span></h5>
+            <div ng-repeat="like in comments.liked_by" class="text-success">
+                {{like}}
+                </div>
+            </div>
+            </div>
+            
+        <br><br>
+    </ul>
+    </div>
+</div>
+
+
+   </body>
+    
+     </script>
